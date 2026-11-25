@@ -140,7 +140,7 @@ async function main() {
   console.log(`  tUSD8 Balance:  ${formatUnits(tusd8Bal, tokenDecimals)} ${tokenSymbol}`);
 
   const minGasWei = parseEther('0.05');
-  const sessionBudget = parseUnits('3', tokenDecimals); // 3.00 tUSD8 (fits comfortably inside 5 tUSD8 faucet grant!)
+  const sessionBudget = parseUnits('0.6', tokenDecimals); // 0.60 tUSD8 (fits inside a single 1 tUSD8 daily faucet claim!)
   if (nativeBal < minGasWei) {
     throw new Error(
       `Insufficient tQDAY gas (${formatEther(nativeBal)} tQDAY). Claim free tQDAY at ${AEVUM_FAUCET_URL}`
@@ -148,7 +148,7 @@ async function main() {
   }
   if (tusd8Bal < sessionBudget) {
     throw new Error(
-      `Insufficient tUSD8 (${formatUnits(tusd8Bal, tokenDecimals)} tUSD8; need at least 3 tUSD8). Claim free tUSD8 at ${AEVUM_FAUCET_URL}`
+      `Insufficient tUSD8 (${formatUnits(tusd8Bal, tokenDecimals)} tUSD8; need at least 0.60 tUSD8). Claim 1 tUSD8 at ${AEVUM_FAUCET_URL} or Discord #faucet`
     );
   }
 
@@ -202,7 +202,7 @@ async function main() {
     functionName: 'approve',
     args: [vaultAddress, sessionBudget],
   });
-  await recordStep('3. Approve 3.00 tUSD8 for Vault', approveHash);
+  await recordStep('3. Approve 0.60 tUSD8 for Vault', approveHash);
 
   // Step 4: Create Scoped AI Agent Session with Deposit
   const nowSec = BigInt(Math.floor(Date.now() / 1000));
@@ -212,18 +212,18 @@ async function main() {
     functionName: 'createSessionWithDeposit',
     args: [
       agentAccount.address,
-      parseUnits('1.5', tokenDecimals), // perTxLimit: 1.50 tUSD8
-      parseUnits('2.5', tokenDecimals), // dailyLimit: 2.50 tUSD8
-      sessionBudget, // totalBudget: 3.00 tUSD8
+      parseUnits('0.3', tokenDecimals), // perTxLimit: 0.30 tUSD8
+      parseUnits('0.5', tokenDecimals), // dailyLimit: 0.50 tUSD8
+      sessionBudget, // totalBudget: 0.60 tUSD8
       nowSec + 7n * 86_400n,
       true,
       [payeeAccount.address],
       'Aevum Autonomous Procurement Agent',
     ],
   });
-  await recordStep('4. Create AI Agent Policy Session (3.00 tUSD8)', createSessionHash);
+  await recordStep('4. Create AI Agent Policy Session (0.60 tUSD8)', createSessionHash);
 
-  // Step 5: EIP-712 Signed AI Agent Direct Payment (1.00 tUSD8 -> Payee)
+  // Step 5: EIP-712 Signed AI Agent Direct Payment (0.20 tUSD8 -> Payee)
   const memoHash = keccak256(stringToHex('aevum-live-agent-api-settlement-001'));
   const payDeadline = nowSec + 3600n;
   const paySig = await agentAccount.signTypedData({
@@ -238,7 +238,7 @@ async function main() {
     message: {
       sessionId: 1n,
       recipient: payeeAccount.address,
-      amount: parseUnits('1', tokenDecimals),
+      amount: parseUnits('0.2', tokenDecimals),
       nonce: 0n,
       deadline: payDeadline,
       memoHash,
@@ -248,11 +248,11 @@ async function main() {
     address: vaultAddress,
     abi: AEVUM_POLICY_PAY_VAULT_ABI,
     functionName: 'executeAgentPaymentWithSig',
-    args: [1n, payeeAccount.address, parseUnits('1', tokenDecimals), 0n, payDeadline, memoHash, paySig],
+    args: [1n, payeeAccount.address, parseUnits('0.2', tokenDecimals), 0n, payDeadline, memoHash, paySig],
   });
-  await recordStep('5. Relayed EIP-712 Agent Payment (1.00 tUSD8)', agentPayHash);
+  await recordStep('5. Relayed EIP-712 Agent Payment (0.20 tUSD8)', agentPayHash);
 
-  // Step 6: EIP-712 Signed Agent Confirmation-of-Payee Invoice Escrow (1.00 tUSD8)
+  // Step 6: EIP-712 Signed Agent Confirmation-of-Payee Invoice Escrow (0.20 tUSD8)
   const copCode = 'AEVUM-COP-2026-VERIFIED';
   const confirmationHash = await publicClient.readContract({
     address: vaultAddress,
@@ -273,7 +273,7 @@ async function main() {
     message: {
       sessionId: 1n,
       payee: payeeAccount.address,
-      amount: parseUnits('1', tokenDecimals),
+      amount: parseUnits('0.2', tokenDecimals),
       expiresAt: invoiceExpiresAt,
       confirmationHash,
       nonce: 1n,
@@ -287,7 +287,7 @@ async function main() {
     args: [
       1n,
       payeeAccount.address,
-      parseUnits('1', tokenDecimals),
+      parseUnits('0.2', tokenDecimals),
       invoiceExpiresAt,
       confirmationHash,
       'https://qday.io/builder-challenge#inv-001',
@@ -296,7 +296,7 @@ async function main() {
       invSig,
     ],
   });
-  await recordStep('6. Stage CoP Escrow Invoice via Agent Sig (1.00 tUSD8)', createInvoiceHash);
+  await recordStep('6. Stage CoP Escrow Invoice via Agent Sig (0.20 tUSD8)', createInvoiceHash);
 
   // Step 7: Payee Confirms Identity + Reference Code and Claims Escrow
   const payeeWallet = createWalletClient({
@@ -310,16 +310,16 @@ async function main() {
     functionName: 'confirmAndClaimInvoice',
     args: [1n, copCode],
   });
-  await recordStep('7. Payee Confirmation-of-Payee Claim (1.00 tUSD8)', claimHash);
+  await recordStep('7. Payee Confirmation-of-Payee Claim (0.20 tUSD8)', claimHash);
 
-  // Step 8: Revoke Session & Reclaim Remaining 1.00 tUSD8
+  // Step 8: Revoke Session & Reclaim Remaining 0.20 tUSD8
   const revokeHash = await walletClient.writeContract({
     address: vaultAddress,
     abi: AEVUM_POLICY_PAY_VAULT_ABI,
     functionName: 'revokeSessionAndWithdraw',
     args: [1n],
   });
-  await recordStep('8. Revoke Session & Reclaim Unspent 1.00 tUSD8', revokeHash);
+  await recordStep('8. Revoke Session & Reclaim Unspent 0.20 tUSD8', revokeHash);
 
   // Save proof artifacts
   const proofJson = {
