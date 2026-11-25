@@ -1,0 +1,11 @@
+services:
+  aevum-policypay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_VAULT_ADDRESS: ${VITE_VAULT_ADDRESS:-}
+    image: aevum-policypay:latest
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

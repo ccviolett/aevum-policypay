@@ -1,0 +1,31 @@
+{
+  "name": "aevum-policypay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Aevum PolicyPay — Policy-Controlled AI Agent Payments & Confirmation-of-Payee Invoice Escrow in tUSD8 on QDay Aevum Testnet (Chain ID 44005)",
+  "scripts": {
+    "compile": "tsx scripts/compile.ts",
+    "test": "pnpm compile && vitest run",
+    "deploy:dry-run": "pnpm compile && tsx scripts/deploy-aevum.ts --dry-run",
+    "deploy:aevum": "pnpm compile && tsx scripts/deploy-aevum.ts",
+    "dev": "pnpm --filter aevum-policypay-frontend dev",
+    "build": "pnpm compile && pnpm --filter aevum-policypay-frontend build",
+    "typecheck": "tsc --noEmit && pnpm --filter aevum-policypay-frontend typecheck"
+  },
+  "dependencies": {
+    "viem": "^2.45.0"
+  },
+  "devDependencies": {
+    "@ethereumjs/common": "^10.1.0",
+    "@ethereumjs/evm": "^10.1.0",
+    "@ethereumjs/tx": "^10.1.0",
+    "@ethereumjs/util": "^10.1.0",
+    "@ethereumjs/vm": "^10.1.0",
+    "@types/node": "^22.15.0",
+    "solc": "0.8.28",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

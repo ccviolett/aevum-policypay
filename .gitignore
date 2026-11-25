@@ -1,0 +1,11 @@
+node_modules
+artifacts
+frontend/dist
+.env
+.env.local
+.env.testnet
+USER_ACTION_NEEDED.md
+deployment-proof.json
+DEPLOYMENT_RECEIPT.md
+*.log
+.DS_Store
